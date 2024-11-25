@@ -193,6 +193,11 @@ class PrintMessageBehaviour(HelloWorldABCIBaseBehaviour, ABC):
         else:
             message = ":|"
 
+        if self.params.owner_address:
+            message = f"{message} The owner's address is {self.params.owner_address}"
+        else:
+            message = f"{message} The owner's address is unknown."
+
         printed_message = f"Agent {self.context.agent_name} (address {self.context.agent_address}) in period {self.synchronized_data.period_count} says: {message}"
 
         print(printed_message)
