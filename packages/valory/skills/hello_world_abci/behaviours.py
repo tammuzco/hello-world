@@ -30,6 +30,7 @@ from packages.valory.skills.abstract_round_abci.behaviours import (
 from packages.valory.skills.hello_world_abci.models import HelloWorldParams, SharedState
 from packages.valory.skills.hello_world_abci.payloads import (
     CollectRandomnessPayload,
+    ExecutionCounterPayload,
     PrintMessagePayload,
     RegistrationPayload,
     ResetPayload,
@@ -37,6 +38,7 @@ from packages.valory.skills.hello_world_abci.payloads import (
 )
 from packages.valory.skills.hello_world_abci.rounds import (
     CollectRandomnessRound,
+    ExecutionCounterRound,
     HelloWorldAbciApp,
     PrintMessageRound,
     RegistrationRound,
@@ -193,6 +195,11 @@ class PrintMessageBehaviour(HelloWorldABCIBaseBehaviour, ABC):
         else:
             message = ":|"
 
+        if self.params.owner_address:
+            message = f"{message} The owner's address is {self.params.owner_address}"
+        else:
+            message = f"{message} The owner's address is unknown."
+
         printed_message = f"Agent {self.context.agent_name} (address {self.context.agent_address}) in period {self.synchronized_data.period_count} says: {message}"
 
         print(printed_message)
@@ -203,6 +210,35 @@ class PrintMessageBehaviour(HelloWorldABCIBaseBehaviour, ABC):
         yield from self.send_a2a_transaction(payload)
         yield from self.wait_until_round_end()
 
+        self.set_done()
+
+class ExecutionCounterBehaviour(HelloWorldABCIBaseBehaviour, ABC):
+    """Counts the number of executions of the keeper agent."""
+
+    matching_round = ExecutionCounterRound
+
+    def async_act(self) -> Generator:
+        """
+        Do the action.
+
+        Steps:
+        - Increment the execution counter if it is (Count start from 1).
+        - Send the transaction with the updated execution counter and wait for it to be mined.
+        - Wait until the ABCI application transitions to the next round.
+        - Set the behaviour to done.
+        """
+
+        # Get the current count and increment
+        print_count = self.synchronized_data.print_count + 1
+
+        # Log the updated execution count
+        self.context.logger.info(
+            f"The current period: {self.synchronized_data.period_count} increments execution count to: {print_count}"
+        )
+
+        payload = ExecutionCounterPayload(self.context.agent_address, print_count)
+        yield from self.send_a2a_transaction(payload)
+        yield from self.wait_until_round_end()
         self.set_done()
 
 
@@ -251,5 +287,6 @@ class HelloWorldRoundBehaviour(AbstractRoundBehaviour):
         CollectRandomnessBehaviour,  # type: ignore
         SelectKeeperBehaviour,  # type: ignore
         PrintMessageBehaviour,  # type: ignore
+        ExecutionCounterBehaviour,  # type: ignore
         ResetAndPauseBehaviour,  # type: ignore
     }

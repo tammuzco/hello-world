@@ -50,6 +50,11 @@ class SelectKeeperPayload(BaseTxPayload):
 
     keeper: str
 
+@dataclass(frozen=True)
+class ExecutionCounterPayload(BaseTxPayload):
+    """Counts the number of executions of the keeper agent."""
+
+    print_count: int
 
 @dataclass(frozen=True)
 class ResetPayload(BaseTxPayload):

@@ -19,7 +19,7 @@
 
 """This module contains the shared state for the Hello World application."""
 
-from typing import Any
+from typing import Any, Optional
 
 from packages.valory.skills.abstract_round_abci.models import ApiSpecs, BaseParams
 from packages.valory.skills.abstract_round_abci.models import (
@@ -61,6 +61,7 @@ class HelloWorldParams(BaseParams):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the parameters."""
         self.hello_world_string: str = self._ensure("hello_world_message", kwargs, str)
+        self.owner_address: Optional[str] = self._ensure("owner_address", kwargs, str)
         super().__init__(*args, **kwargs)
 
 
